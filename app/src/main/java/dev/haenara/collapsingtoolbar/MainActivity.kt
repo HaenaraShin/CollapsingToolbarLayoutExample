@@ -4,9 +4,8 @@ import android.app.SearchManager
 import android.content.Context
 import android.os.Bundle
 import android.view.Menu
-import android.view.MenuItem
-import android.view.View
 import android.view.ViewGroup
+import android.widget.SearchView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -25,8 +24,6 @@ class MainActivity : AppCompatActivity() {
         fab2.hide()
 
         fab.setOnClickListener {
-//            Snackbar.make(it, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                .setAction("Action", null).show()
             hide()
             fab2.show()
         }
@@ -39,17 +36,32 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.appbar_actions, menu)
-        return true
-    }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.action_search -> {
-                collapse()
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        val searchView = (menu.findItem(R.id.action_search).actionView as SearchView).apply {
+            setSearchableInfo(searchManager.getSearchableInfo(componentName))
+        }
+
+        searchView.setOnClickListener {
+            collapse()
+        }
+
+        searchView.queryHint = "검색어를 입력해보세요"
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                Snackbar.make(searchView, query ?: "", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
                 return true
             }
-        }
-        return super.onOptionsItemSelected(item)
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                collapse()
+                Toast.makeText(this@MainActivity, newText ?: "", Toast.LENGTH_SHORT).show()
+                return true
+            }
+        })
+        return true
     }
 
     fun hide() {
